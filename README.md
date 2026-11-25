@@ -1,6 +1,6 @@
 # HCC Remote
 
-HCC Remote is a cross-platform desktop dashboard for read-only Microsoft Intune inventory and supervised lab support. When not connected to a tenant, it shows clearly labeled sample data.
+HCC Remote is a cross-platform desktop dashboard for read-only Microsoft Intune inventory and supervised lab support. It displays only inventory returned by the connected school tenant; while disconnected, it prompts you to connect and shows no placeholder devices.
 
 HCC Remote does not install a device agent, stream screens, or send remote-control commands. Use Microsoft Intune Remote Help for support sessions; users must approve attended screen sharing or control.
 
@@ -14,11 +14,13 @@ An Intune administrator must first register a single-tenant public desktop app i
 4. Copy the tenant ID and app client ID.
 5. In HCC Remote, select **Connect Intune**, enter those two IDs, and sign in using the on-screen Microsoft device-code flow.
 
+On first launch, HCC Remote opens the connection setup. It shows no devices until a school account signs in successfully; there is no placeholder inventory.
+
 Do not create a client secret for this public desktop app. The app stores only the tenant and client IDs in its local application settings. Access tokens stay in memory and are discarded when HCC Remote exits. Device inventory requests are read-only and return only the fields needed by the dashboard; user names, serial numbers, and network addresses are not requested.
 
 The connected dashboard shows devices visible to the signed-in Intune account, their compliance state, OS/model, category, management agent, and last Intune sync. Intune sync is not a live screen feed; inventory and check-in freshness depend on the device and Intune service.
 
-If sign-in fails, ask your tenant administrator to verify the app registration, Graph delegated permission, admin consent, Intune role/scope, and device enrollment. HCC Remote displays Microsoft Graph errors rather than falling back to success-shaped demo data.
+If sign-in fails, ask your tenant administrator to verify the app registration, Graph delegated permission, admin consent, Intune role/scope, and device enrollment. HCC Remote displays Microsoft Graph errors and never substitutes placeholder device data.
 
 ## Windows and macOS support
 

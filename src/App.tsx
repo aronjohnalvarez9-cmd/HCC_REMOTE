@@ -15,24 +15,9 @@ type Device = {
   lastSyncTimestamp: number | null;
   model: string;
   managementAgent: string;
-  assignedUser?: string;
 };
 
-const demoDevices: Device[] = [
-  { id: "demo-01", name: "HCC-LAB-01", category: "Computer Lab A", status: "Online", os: "Windows 11", lastSync: "Just now", lastSyncTimestamp: Date.now(), model: "Sample workstation", managementAgent: "Demo", assignedUser: "Available" },
-  { id: "demo-02", name: "HCC-LAB-02", category: "Computer Lab A", status: "Online", os: "Windows 11", lastSync: "1 min ago", lastSyncTimestamp: Date.now() - 60_000, model: "Sample workstation", managementAgent: "Demo", assignedUser: "M. Santos" },
-  { id: "demo-03", name: "HCC-LAB-03", category: "Computer Lab A", status: "Attention", os: "Windows 10", lastSync: "3 min ago", lastSyncTimestamp: Date.now() - 180_000, model: "Sample workstation", managementAgent: "Demo", assignedUser: "Available" },
-  { id: "demo-04", name: "HCC-LAB-04", category: "Computer Lab A", status: "Online", os: "Windows 11", lastSync: "Just now", lastSyncTimestamp: Date.now(), model: "Sample workstation", managementAgent: "Demo", assignedUser: "Available" },
-  { id: "demo-05", name: "HCC-LAB-05", category: "Computer Lab B", status: "Offline", os: "Windows 11", lastSync: "Yesterday", lastSyncTimestamp: Date.now() - 86_400_000, model: "Sample workstation", managementAgent: "Demo", assignedUser: "—" },
-  { id: "demo-06", name: "HCC-LAB-06", category: "Computer Lab B", status: "Online", os: "macOS 15", lastSync: "2 min ago", lastSyncTimestamp: Date.now() - 120_000, model: "Sample workstation", managementAgent: "Demo", assignedUser: "J. Cruz" },
-  { id: "demo-07", name: "HCC-LAB-07", category: "Computer Lab B", status: "Online", os: "Windows 11", lastSync: "Just now", lastSyncTimestamp: Date.now(), model: "Sample workstation", managementAgent: "Demo", assignedUser: "Available" },
-  { id: "demo-08", name: "HCC-LAB-08", category: "Computer Lab B", status: "Online", os: "Windows 11", lastSync: "1 min ago", lastSyncTimestamp: Date.now() - 60_000, model: "Sample workstation", managementAgent: "Demo", assignedUser: "Available" },
-];
-
 const statusClass: Record<string, string> = {
-  Online: "online",
-  Attention: "attention",
-  Offline: "offline",
   Compliant: "compliant",
   Noncompliant: "noncompliant",
   "In grace period": "attention",
@@ -94,7 +79,7 @@ function errorText(error: unknown) {
 function App() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All devices");
-  const [selectedId, setSelectedId] = useState(demoDevices[0].id);
+  const [selectedId, setSelectedId] = useState("");
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<IntuneSettings>({
@@ -117,7 +102,7 @@ function App() {
   const greeting =
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const isConnected = liveDevices !== null;
-  const devices = liveDevices ?? demoDevices;
+  const devices = liveDevices ?? [];
 
   useEffect(() => {
     let active = true;
@@ -126,7 +111,12 @@ function App() {
     window.hccRemote
       .getIntuneSettings()
       .then((savedSettings) => {
-        if (active) setSettings(savedSettings);
+        if (active) {
+          setSettings(savedSettings);
+          if (!savedSettings.tenantId || !savedSettings.clientId) {
+            setSettingsOpen(true);
+          }
+        }
       })
       .catch((settingsError: unknown) => {
         if (active) setError(errorText(settingsError));
@@ -161,9 +151,6 @@ function App() {
     devices.find((device) => device.id === selectedId) ??
     devices[0];
 
-  const onlineCount = demoDevices.filter((device) => device.status === "Online").length;
-  const attentionCount = demoDevices.filter((device) => device.status === "Attention").length;
-  const offlineCount = demoDevices.filter((device) => device.status === "Offline").length;
   const compliantCount = devices.filter((device) => device.status === "Compliant").length;
   const reviewCount = devices.filter((device) =>
     ["Noncompliant", "Needs review", "Unknown", "In grace period"].includes(device.status),
@@ -175,19 +162,12 @@ function App() {
   ).length;
   const hasMacDevices = devices.some((device) => device.os.toLowerCase().includes("mac"));
 
-  const stats = isConnected
-    ? [
-        { label: "Managed devices", value: devices.length, detail: "Reported by Intune", icon: "▣", tone: "blue" },
-        { label: "Compliant", value: compliantCount, detail: "Intune compliance state", icon: "●", tone: "green" },
-        { label: "Needs review", value: reviewCount, detail: "Check compliance status", icon: "!", tone: "amber" },
-        { label: "Stale check-ins", value: staleCount, detail: "No sync in 7+ days", icon: "◌", tone: "gray" },
-      ]
-    : [
-        { label: "Total devices", value: devices.length, detail: "Sample data · 2 lab rooms", icon: "▣", tone: "blue" },
-        { label: "Online now", value: onlineCount, detail: "Sample status only", icon: "●", tone: "green" },
-        { label: "Needs attention", value: attentionCount, detail: "Sample status only", icon: "!", tone: "amber" },
-        { label: "Offline", value: offlineCount, detail: "Sample status only", icon: "◌", tone: "gray" },
-      ];
+  const stats = [
+    { label: "Managed devices", value: devices.length, detail: "Reported by Intune", icon: "▣", tone: "blue" },
+    { label: "Compliant", value: compliantCount, detail: "Intune compliance state", icon: "●", tone: "green" },
+    { label: "Needs review", value: reviewCount, detail: "Check compliance status", icon: "!", tone: "amber" },
+    { label: "Stale check-ins", value: staleCount, detail: "No sync in 7+ days", icon: "◌", tone: "gray" },
+  ];
 
   async function connectToIntune() {
     setBusy(true);
@@ -233,7 +213,7 @@ function App() {
       await window.hccRemote.disconnectIntune();
       setLiveDevices(null);
       setAccountName("");
-      setSelectedId(demoDevices[0].id);
+      setSelectedId("");
       setFilter("All devices");
     } catch (disconnectError: unknown) {
       setError(errorText(disconnectError));
@@ -259,7 +239,7 @@ function App() {
 
   const filterOptions = isConnected
     ? ["All devices", "Compliant", "Noncompliant", "Needs review"]
-    : ["All devices", "Online", "Attention", "Offline"];
+    : ["All devices"];
 
   return (
     <div className="app-shell">
@@ -275,22 +255,29 @@ function App() {
         <div className="nav-label">WORKSPACE</div>
         <button className="nav-item active"><span className="nav-icon">▦</span> Overview</button>
         <button className="nav-item" onClick={() => setFilter("All devices")}><span className="nav-icon">▣</span> Devices <span className="nav-count">{devices.length}</span></button>
-        <button className="nav-item" onClick={() => setFilter(isConnected ? "Needs review" : "Attention")}><span className="nav-icon">◷</span> Activity</button>
+        <button className="nav-item" onClick={() => {
+          if (isConnected) {
+            setFilter("Needs review");
+          } else {
+            setError("");
+            setSettingsOpen(true);
+          }
+        }}><span className="nav-icon">◷</span> Activity</button>
 
         <div className="sidebar-spacer" />
         <div className="connection-card">
           <div className="connection-icon">⌁</div>
           <div>
-            <strong>{isConnected ? "Intune connected" : "Local demo"}</strong>
-            <span>{isConnected ? "Read-only inventory" : "Sample data only"}</span>
+            <strong>{isConnected ? "Intune connected" : "Not connected"}</strong>
+            <span>{isConnected ? "Read-only inventory" : "Connect to load devices"}</span>
           </div>
-          <span className={`connection-dot ${isConnected ? "" : "demo-dot"}`} />
+          <span className={`connection-dot ${isConnected ? "" : "disconnected-dot"}`} />
         </div>
         <div className="profile">
-          <div className="avatar">{isConnected ? "IT" : "LA"}</div>
+          <div className="avatar">{isConnected ? "IT" : "?"}</div>
           <div className="profile-copy">
-            <strong>{isConnected ? accountName : "Lab Administrator"}</strong>
-            <span>{isConnected ? "Microsoft Entra account" : "Not signed in"}</span>
+            <strong>{isConnected ? accountName : "Not signed in"}</strong>
+            <span>{isConnected ? "Microsoft Entra account" : "Connect Intune to sign in"}</span>
           </div>
           <span className="profile-menu">···</span>
         </div>
@@ -300,8 +287,8 @@ function App() {
         <header className="topbar">
           <div className="breadcrumbs">Workspace <span>/</span> <strong>Overview</strong></div>
           <div className="topbar-right">
-            <span className={`demo-pill ${isConnected ? "connected-pill" : ""}`}>
-              <span /> {isConnected ? "INTUNE CONNECTED" : "DEMO DATA"}
+            <span className={`connection-pill ${isConnected ? "connected-pill" : ""}`}>
+              <span /> {isConnected ? "INTUNE CONNECTED" : "NOT CONNECTED"}
             </span>
             {isConnected ? (
               <>
@@ -323,7 +310,7 @@ function App() {
           <section className="welcome-row">
             <div>
               <div className="eyebrow">{today}</div>
-              <h1>{greeting}, Administrator <span className="wave">✦</span></h1>
+              <h1>{isConnected ? `${greeting}, ${accountName}` : "Welcome to HCC Remote"} <span className="wave">✦</span></h1>
               <p className="subtitle">
                 {isConnected
                   ? "Read-only device inventory from your Intune tenant."
@@ -338,12 +325,12 @@ function App() {
           {!isConnected && (
             <div className="intune-banner">
               <strong>Connect to Microsoft Intune</strong>
-              <span>Only read-only device inventory is requested. Demo entries are not real devices.</span>
+              <span>Sign in with your school account to load read-only managed-device inventory from your tenant.</span>
               <button onClick={() => { setError(""); setSettingsOpen(true); }}>Set up connection <span>→</span></button>
             </div>
           )}
 
-          {isConnected && !hasMacDevices && (
+          {isConnected && devices.length > 0 && !hasMacDevices && (
             <div className="intune-banner">
               <strong>No macOS devices returned by Intune</strong>
               <span>Enroll school-owned Macs through Apple School Manager and Intune. They will appear after enrollment and check-in.</span>
@@ -353,18 +340,20 @@ function App() {
 
           {error && !settingsOpen && <div className="inline-error" role="alert">{error}</div>}
 
-          <section className="stat-grid" aria-label="Device summary">
-            {stats.map((stat) => <StatCard key={stat.label} {...stat} />)}
-          </section>
+          {isConnected && (
+            <section className="stat-grid" aria-label="Device summary">
+              {stats.map((stat) => <StatCard key={stat.label} {...stat} />)}
+            </section>
+          )}
 
           <section className="devices-section">
             <div className="section-heading">
               <div>
                 <h2>Lab devices <span className="device-total">{devices.length}</span></h2>
-                <p>{isConnected ? "Managed devices visible to your Intune account" : "Sample workstations · not connected to a tenant"}</p>
+                <p>{isConnected ? "Managed devices visible to your Intune account" : "Connect Intune to show your tenant-managed devices"}</p>
               </div>
-              <button className="quiet-button" disabled={busy} onClick={isConnected ? refreshIntune : () => { setQuery(""); setFilter("All devices"); }}>
-                ↻ <span>{isConnected ? "Refresh inventory" : "Reset demo"}</span>
+              <button className="quiet-button" disabled={busy} onClick={isConnected ? refreshIntune : () => { setError(""); setSettingsOpen(true); }}>
+                {isConnected ? "↻" : "+"} <span>{isConnected ? "Refresh inventory" : "Connect Intune"}</span>
               </button>
             </div>
 
@@ -389,7 +378,7 @@ function App() {
             <div className="content-grid">
               <div className="table-card">
                 <div className="table-head">
-                  <span>DEVICE</span><span>CATEGORY</span><span>{isConnected ? "COMPLIANCE" : "STATUS"}</span><span>{isConnected ? "LAST INTUNE SYNC" : "LAST SEEN"}</span><span />
+                  <span>DEVICE</span><span>CATEGORY</span><span>COMPLIANCE</span><span>LAST INTUNE SYNC</span><span />
                 </div>
                 {filteredDevices.length > 0 ? filteredDevices.map((device) => (
                   <button
@@ -407,12 +396,12 @@ function App() {
                   <div className="empty-state">
                     {isConnected
                       ? "No Intune-managed devices match this filter. Check enrollment, assignment scope, and consent."
-                      : "No devices match this search."}
+                      : "Connect Intune to load managed devices from your school tenant."}
                   </div>
                 )}
                 <div className="table-footer">
                   Showing <strong>{filteredDevices.length}</strong> of <strong>{devices.length}</strong> devices
-                  <span>{isConnected ? "Read-only Intune inventory · not a live screen feed" : "Demo data · updates are not live"}</span>
+                  <span>{isConnected ? "Read-only Intune inventory · not a live screen feed" : "No tenant inventory loaded"}</span>
                 </div>
               </div>
 
@@ -425,16 +414,12 @@ function App() {
                   <div className="detail-device-icon">▣</div>
                   <h3>{activeDevice.name}</h3>
                   <p className="detail-room">{activeDevice.category}</p>
-                  <div className="detail-status"><StatusBadge status={activeDevice.status} /><span>·</span><span>{isConnected ? "Intune managed" : "Demo device"}</span></div>
+                  <div className="detail-status"><StatusBadge status={activeDevice.status} /><span>·</span><span>Intune managed</span></div>
                   <div className="detail-divider" />
                   <DetailRow label="Operating system" value={activeDevice.os} />
                   <DetailRow label="Model" value={activeDevice.model} />
-                  <DetailRow label={isConnected ? "Last Intune sync" : "Last seen"} value={activeDevice.lastSync} />
-                  {isConnected ? (
-                    <DetailRow label="Management agent" value={activeDevice.managementAgent} />
-                  ) : (
-                    <DetailRow label="Assigned user" value={activeDevice.assignedUser ?? "—"} />
-                  )}
+                  <DetailRow label="Last Intune sync" value={activeDevice.lastSync} />
+                  <DetailRow label="Management agent" value={activeDevice.managementAgent} />
                   <div className="consent-note">
                     <strong>Remote support uses Microsoft Remote Help</strong>
                     <span>Start support from Intune. The user must approve an attended session; use the Remote Help web helper from Windows for macOS.</span>
@@ -445,8 +430,8 @@ function App() {
             </div>
           </section>
           <footer className="page-footer">
-            <span>HCC Remote <b>·</b> Prototype 0.2</span>
-            <span>{isConnected ? "Intune check-in data can be delayed; it is not real-time monitoring." : "Designed for supervised computer labs"}</span>
+            <span>HCC Remote <b>·</b> Intune inventory</span>
+            <span>{isConnected ? "Intune check-in data can be delayed; it is not real-time monitoring." : "Connect your school tenant to load live inventory."}</span>
           </footer>
         </div>
       </main>
@@ -493,7 +478,7 @@ function App() {
             <div className="eyebrow">SUPERVISED SUPPORT</div>
             <h2 id="support-title">Use Microsoft Remote Help</h2>
             <p>Choose the enrolled device in Intune and start an attended Remote Help session. From the Windows master, use the Remote Help web helper for macOS. The person at the device can see who is connecting, approve or decline, and end the session.</p>
-            <div className="prototype-notice">HCC Remote only displays Intune inventory. It does not stream screens or send control commands.</div>
+            <div className="support-scope-note">HCC Remote displays read-only Intune inventory. It does not stream screens or send control commands.</div>
             {error && <div className="inline-error" role="alert">{error}</div>}
             <button className="primary-button dialog-action" onClick={openIntunePortal}>Open Intune admin center</button>
           </section>
