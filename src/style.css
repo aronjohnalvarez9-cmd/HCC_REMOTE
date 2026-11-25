@@ -42,6 +42,7 @@ button { cursor: pointer; }
 .connection-card strong { color: #e0e7f2; font-size: 10px; font-weight: 600; }
 .connection-card div:nth-child(2) span { color: #8392aa; font-size: 9px; margin-top: 3px; }
 .connection-dot { background: #44c18c; border-radius: 50%; height: 6px; margin-left: auto; width: 6px; }
+.connection-dot.demo-dot { background: #e2a340; }
 .profile { align-items: center; border-top: 1px solid #263550; display: flex; gap: 9px; padding: 15px 3px 0; }
 .avatar { align-items: center; background: #364d70; border-radius: 50%; color: #dfe7f3; display: flex; font-size: 10px; font-weight: 700; height: 31px; justify-content: center; width: 31px; }
 .profile-copy { min-width: 0; }
@@ -58,6 +59,12 @@ button { cursor: pointer; }
 .topbar-right { align-items: center; display: flex; gap: 20px; }
 .demo-pill { align-items: center; background: #eff3ff; border-radius: 4px; color: #5872c1; display: flex; font-size: 8px; font-weight: 700; gap: 6px; letter-spacing: .75px; padding: 7px 8px; }
 .demo-pill span { background: #6b85ec; border-radius: 50%; height: 5px; width: 5px; }
+.demo-pill.connected-pill { background: #eaf8f1; color: #319c6e; }
+.demo-pill.connected-pill span { background: #39b77f; }
+.intune-button { background: #fff; border: 1px solid #dfe5ef; border-radius: 5px; color: #4d659f; font-size: 9px; font-weight: 600; padding: 7px 10px; }
+.intune-button:hover:not(:disabled) { background: #f7f9ff; }
+.intune-button:disabled, .text-button:disabled, .quiet-button:disabled { cursor: wait; opacity: .6; }
+.text-button { background: transparent; border: 0; color: #7d899b; font-size: 9px; }
 .help-button { background: #fff; border: 1px solid #e6eaf0; border-radius: 50%; color: #7e899b; font-size: 11px; height: 23px; width: 23px; }
 .page-content { margin: 0 auto; max-width: 1460px; padding: 36px 38px 20px; }
 .welcome-row { align-items: flex-end; display: flex; justify-content: space-between; margin-bottom: 28px; }
@@ -111,6 +118,10 @@ kbd { border: 1px solid #e8ebf0; border-radius: 3px; color: #9ba5b4; font: 9px "
 .status-badge i { border-radius: 50%; height: 5px; width: 5px; }
 .status-badge.online { background: #eaf8f1; color: #319c6e; }
 .status-badge.online i { background: #39b77f; }
+.status-badge.compliant { background: #eaf8f1; color: #319c6e; }
+.status-badge.compliant i { background: #39b77f; }
+.status-badge.noncompliant { background: #fff0ef; color: #b34a43; }
+.status-badge.noncompliant i { background: #d85e55; }
 .status-badge.attention { background: #fff5e5; color: #b9852e; }
 .status-badge.attention i { background: #e1a340; }
 .status-badge.offline { background: #f0f2f5; color: #7c8798; }
@@ -121,6 +132,12 @@ kbd { border: 1px solid #e8ebf0; border-radius: 3px; color: #9ba5b4; font: 9px "
 .table-footer strong { color: #56647a; font-weight: 600; }
 .table-footer span { margin-left: auto; }
 .empty-state { color: #8d98a9; font-size: 10px; padding: 35px 12px; text-align: center; }
+.intune-banner { align-items: center; background: #f2f5ff; border: 1px solid #e1e8ff; border-radius: 7px; color: #61708d; display: flex; gap: 12px; margin: -8px 0 20px; padding: 11px 13px; }
+.intune-banner strong { color: #40547e; font-size: 10px; white-space: nowrap; }
+.intune-banner span { flex: 1; font-size: 9px; line-height: 1.5; }
+.intune-banner button { background: transparent; border: 0; color: #536fca; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.intune-banner button span { margin-left: 4px; }
+.inline-error { background: #fff0ef; border: 1px solid #f5d2cf; border-radius: 5px; color: #a3413b; font-size: 9px; line-height: 1.5; margin: 10px 0; padding: 9px 10px; }
 .detail-card { padding: 13px 13px 14px; }
 .detail-topline { align-items: center; display: flex; justify-content: space-between; }
 .detail-label { color: #97a1b0; font-size: 8px; font-weight: 700; letter-spacing: .8px; }
@@ -144,6 +161,7 @@ kbd { border: 1px solid #e8ebf0; border-radius: 3px; color: #9ba5b4; font: 9px "
 
 .modal-backdrop { align-items: center; background: #101c3380; display: flex; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 2; }
 .approval-dialog { background: #fff; border-radius: 12px; box-shadow: 0 20px 70px #11213d40; max-width: 390px; padding: 27px; position: relative; width: 100%; }
+.setup-dialog { max-width: 480px; }
 .dialog-close { background: transparent; border: 0; color: #919bad; font-size: 21px; line-height: 1; position: absolute; right: 15px; top: 13px; }
 .dialog-icon { align-items: center; background: #eaf8f1; border-radius: 9px; color: #39a977; display: flex; font-size: 17px; height: 38px; justify-content: center; margin-bottom: 19px; width: 38px; }
 .approval-dialog h2 { color: #233149; font: 700 19px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: -.4px; margin: 7px 0 8px; }
@@ -153,6 +171,15 @@ kbd { border: 1px solid #e8ebf0; border-radius: 3px; color: #9ba5b4; font: 9px "
 .dialog-summary strong { color: #4a5870; font-size: 10px; }
 .prototype-notice { color: #9b7234; font-size: 9px; line-height: 1.5; margin: 12px 0 16px; }
 .dialog-action { width: 100%; }
+.config-field { display: block; margin: 12px 0; }
+.config-field span { color: #526078; display: block; font-size: 9px; font-weight: 600; margin-bottom: 5px; }
+.config-field input { border: 1px solid #dfe5ef; border-radius: 5px; color: #34425a; font-size: 10px; height: 35px; outline: 0; padding: 0 9px; width: 100%; }
+.config-field input:focus { border-color: #7890ed; box-shadow: 0 0 0 2px #5275e81c; }
+.setup-dialog code { background: #f0f3f9; border-radius: 3px; color: #526078; font-size: 9px; padding: 2px 4px; }
+.device-code-panel { background: #f7f8fc; border: 1px solid #e8ecf3; border-radius: 6px; display: flex; flex-direction: column; gap: 9px; margin: 12px 0; padding: 12px; }
+.device-code-panel > span { color: #6f7c91; font-size: 9px; }
+.device-code-panel > strong { color: #25344f; font: 700 22px ui-monospace, Consolas, monospace; letter-spacing: 2px; }
+.setup-notice { color: #8a95a6; font-size: 8px; line-height: 1.5; margin: 13px 0; }
 
 @media (max-width: 1120px) {
   .sidebar { flex-basis: 210px; }

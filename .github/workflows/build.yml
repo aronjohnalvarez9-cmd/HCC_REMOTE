@@ -29,6 +29,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: npm test
       - run: npm run dist:${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
